@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { DatePicker, Input } from 'antd';
+import React, { useEffect, useState } from 'react';
+import {
+  DatePicker, Input, Layout, Table,
+} from 'antd';
 import moment from 'moment';
+import restaurantService from '../services/restaurant';
 import 'antd/dist/antd.css';
 
 const pageStyles = {
@@ -14,51 +17,104 @@ const filterContainer = {
   display: 'flex',
   flexDirection: 'row',
   justifyContent: 'space-between',
-  width: '80vw',
+  width: '100%',
 };
 const inputStyle = {
-  width: '70%',
+  flex: 1,
   marginRight: '16px',
   border: '1px solid black',
   borderRadius: 8,
+  overflow: 'hidden',
 };
 const datepickerStyle = {
-  width: '30%',
+  minWidth: '400px',
   border: '1px solid black',
   borderRadius: 8,
 };
+const tableStyle = {
+  marginTop: '16px',
+  border: '1px solid black',
+  borderRadius: 16,
+  overflow: 'hidden',
+};
+
+const renderColumn = (array) => [
+  {
+    title: '#', key: 'id', width: '75px', render: (_, record) => <p>{array.indexOf(record) + 1}</p>,
+  },
+  {
+    title: 'Restaurant Name',
+    key: 'name',
+    dataIndex: 'name',
+    render: (name) => <p>{name}</p>,
+  },
+  {
+    title: 'Open Hours',
+    key: 'hours',
+    dataIndex: 'hours',
+    width: '50%',
+    render: (hours) => hours.split('/').map((h) => <p>{h.trim()}</p>),
+  },
+];
 
 const App = () => {
   const [query, setQuery] = useState('');
   const [date, setDate] = useState(null);
+  const [restaurants, setRestaurants] = useState([]);
+  const column = renderColumn(restaurants);
+
+  useEffect(() => {
+    restaurantService
+      .get()
+      .then((response) => {
+        setRestaurants(response.data);
+      });
+  }, []);
 
   const handleDateChange = (val) => {
     setDate(moment(val).toISOString());
-    console.log({ date });
+    restaurantService
+      .get({ date: moment(val).toISOString(), query })
+      .then((response) => {
+        setRestaurants(response.data);
+      });
   };
 
   const handleSearchbarChange = (val) => {
     setQuery(val);
-    console.log({ query });
+    restaurantService
+      .get({ date, query: val })
+      .then((response) => {
+        setRestaurants(response.data);
+      });
   };
 
   return (
-    <main style={pageStyles}>
+    <Layout style={pageStyles}>
       <h1 style={{ marginBottom: -4 }}>Restaurant Browser</h1>
-      <p>Browse your favorite restaurant using our tools. Just input your keywords, your time, or both and enjoy the results!</p>
+      <p>
+        Browse your favorite restaurant using our tools.
+        {' '}
+        Just input your keywords, your time, or both and enjoy the results!
+      </p>
       <div style={filterContainer}>
         <Input placeholder="Search restaurant name" onChange={(e) => handleSearchbarChange(e.target.value)} style={inputStyle} />
         <DatePicker
-          format="YYYY-MM-DD HH:mm"
+          format="LLLL"
           showTime={{
-            defaultValue: moment('00:00:00', 'HH:mm:ss'),
+            defaultValue: moment('00:00', 'HH:mm'),
             format: 'HH:mm',
           }}
           onChange={handleDateChange}
           style={datepickerStyle}
         />
       </div>
-    </main>
+      <Table
+        columns={column}
+        dataSource={restaurants}
+        style={tableStyle}
+      />
+    </Layout>
   );
 };
 
