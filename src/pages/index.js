@@ -3,10 +3,13 @@ import {
   Button, DatePicker, Input, Layout, Modal, Table,
 } from 'antd';
 import moment from 'moment';
+import momentTZ from 'moment-timezone';
 
 import CollectionModal from '../components/CollectionModal';
 import restaurantService from '../services/restaurant';
 import 'antd/dist/antd.css';
+
+momentTZ.tz.setDefault('Etc/UTC');
 
 const pageStyles = {
   display: 'flex',
