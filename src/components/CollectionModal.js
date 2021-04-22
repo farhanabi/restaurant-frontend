@@ -1,8 +1,11 @@
 /* eslint-disable react/jsx-filename-extension */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Button, Input, Layout, Table,
 } from 'antd';
+import PropTypes from 'prop-types';
+
+import collectionService from '../services/collection';
 
 const filterContainer = {
   display: 'flex',
@@ -23,9 +26,42 @@ const finishButtonStyle = {
   borderRadius: '0 8px 8px 0',
 };
 
+const renderColumn = (array) => [
+  {
+    title: '#', key: 'id', width: '75px', render: (_, record) => <p>{array.indexOf(record) + 1}</p>,
+  },
+  {
+    title: 'Collection Name',
+    key: 'name',
+    dataIndex: 'name',
+    render: (name) => <p>{name}</p>,
+  },
+];
+
 const CollectionModal = ({ restaurantName }) => {
+  const [loading, setLoading] = useState(true);
   const [collectionName, setCollectionName] = useState('');
   const [collections, setCollections] = useState([]);
+
+  const column = renderColumn(collections);
+
+  useEffect(() => {
+    collectionService
+      .get()
+      .then((response) => {
+        setCollections(response.data);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleCreateCollection = () => {
+    collectionService
+      .post({
+        restaurant_name: restaurantName,
+        collection_name: collectionName,
+      })
+      .then((response) => setCollections([...collections, response.data]));
+  };
 
   return (
     <>
@@ -33,17 +69,39 @@ const CollectionModal = ({ restaurantName }) => {
         <Input
           style={{
             ...addCollectionInputStyle,
-            borderRadius: collections.length > 0 ? '8px 8px 8px 8px' : '8px 0 0 8px',
+            borderRadius: (collections.filter(
+              (c) => c.name.toLowerCase().includes(collectionName.toLowerCase()),
+            ).length > 0) ? '8px 8px 8px 8px' : '8px 0 0 8px',
           }}
           placeholder="Create or search collection name (e.g. Meat-lovers)"
           onChange={(e) => setCollectionName(e.target.value)}
           value={collectionName}
         />
-        {collections.length === 0 && <Button style={finishButtonStyle}>Create</Button>}
+        {(collections.filter(
+          (c) => c.name.toLowerCase().includes(collectionName.toLowerCase()),
+        ).length === 0)
+        && (
+        <Button
+          style={finishButtonStyle}
+          onClick={handleCreateCollection}
+        >
+          Create new
+        </Button>
+        )}
       </Layout>
-      <Table />
+      <Table
+        loading={loading}
+        columns={column}
+        dataSource={collections.filter(
+          (c) => c.name.toLowerCase().includes(collectionName.toLowerCase()),
+        )}
+      />
     </>
   );
+};
+
+CollectionModal.propTypes = {
+  restaurantName: PropTypes.string,
 };
 
 export default CollectionModal;

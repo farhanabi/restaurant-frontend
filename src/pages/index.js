@@ -60,7 +60,7 @@ const renderColumn = (array) => [
     key: 'hours',
     dataIndex: 'hours',
     width: '40%',
-    render: (hours) => hours.split('/').map((h) => <p>{h.trim()}</p>),
+    render: (hours) => hours.split('/').map((h, i) => <p key={i}>{h.trim()}</p>),
   },
   {
     width: '10%',
