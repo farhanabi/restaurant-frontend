@@ -63,7 +63,7 @@ const renderColumn = (array) => [
     render: (hours) => hours.split('/').map((h, i) => <p key={i}>{h.trim()}</p>),
   },
   {
-    width: '10%',
+    width: '20%',
     render: (_, record) => {
       const [isModalVisible, setIsModalVisible] = useState(false);
 

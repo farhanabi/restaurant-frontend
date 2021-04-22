@@ -1,4 +1,7 @@
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/jsx-filename-extension */
+
 import React, { useEffect, useState } from 'react';
 import {
   Button, Input, Layout, Table,
@@ -26,7 +29,7 @@ const finishButtonStyle = {
   borderRadius: '0 8px 8px 0',
 };
 
-const renderColumn = (array) => [
+const renderColumn = (array, restaurantName, handleUpdateCollection) => [
   {
     title: '#', key: 'id', width: '75px', render: (_, record) => <p>{array.indexOf(record) + 1}</p>,
   },
@@ -36,6 +39,44 @@ const renderColumn = (array) => [
     dataIndex: 'name',
     render: (name) => <p>{name}</p>,
   },
+  {
+    key: 'action',
+    dataIndex: 'restaurants',
+    render: (restaurants, { id, name }) => {
+      const found = restaurants.findIndex(
+        (r) => r === restaurantName,
+      ) >= 0;
+      if (found) {
+        return (
+          <p
+            onClick={() => handleUpdateCollection(
+              id,
+              {
+                collection_name: name,
+                restaurants: restaurants.filter((r) => r !== restaurantName),
+              },
+            )}
+            style={{ color: 'red', cursor: 'pointer', textAlign: 'right' }}
+          >
+            Remove
+          </p>
+        );
+      } return (
+        <p
+          onClick={() => handleUpdateCollection(
+            id,
+            {
+              collection_name: name,
+              restaurants: [...restaurants, restaurantName],
+            },
+          )}
+          style={{ color: 'green', cursor: 'pointer', textAlign: 'right' }}
+        >
+          Add
+        </p>
+      );
+    },
+  },
 ];
 
 const CollectionModal = ({ restaurantName }) => {
@@ -43,25 +84,44 @@ const CollectionModal = ({ restaurantName }) => {
   const [collectionName, setCollectionName] = useState('');
   const [collections, setCollections] = useState([]);
 
-  const column = renderColumn(collections);
-
-  useEffect(() => {
+  const getCollection = () => {
+    setLoading(true);
     collectionService
       .get()
       .then((response) => {
         setCollections(response.data);
         setLoading(false);
       });
-  }, []);
+  };
 
   const handleCreateCollection = () => {
+    setLoading(true);
     collectionService
       .post({
         restaurant_name: restaurantName,
         collection_name: collectionName,
       })
-      .then((response) => setCollections([...collections, response.data]));
+      .then(() => {
+        getCollection();
+        setLoading(false);
+      });
   };
+
+  const handleUpdateCollection = (id, data) => {
+    setLoading(true);
+    collectionService
+      .update(id, data)
+      .then(() => {
+        getCollection();
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    getCollection();
+  }, []);
+
+  const column = renderColumn(collections, restaurantName, handleUpdateCollection);
 
   return (
     <>
@@ -102,6 +162,10 @@ const CollectionModal = ({ restaurantName }) => {
 
 CollectionModal.propTypes = {
   restaurantName: PropTypes.string,
+};
+
+CollectionModal.defaultProps = {
+  restaurantName: 'Restaurant',
 };
 
 export default CollectionModal;

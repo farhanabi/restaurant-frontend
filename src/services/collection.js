@@ -6,6 +6,6 @@ const get = (params) => axios.get(baseUrl, { params });
 
 const post = (data) => axios.post(baseUrl, data);
 
-const update = (name, data) => axios.put(baseUrl, { name, data });
+const update = (id, data) => axios.put(`${baseUrl}/${id}`, data);
 
 export default { get, post, update };
