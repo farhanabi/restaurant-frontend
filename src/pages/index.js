@@ -130,7 +130,9 @@ const App = () => {
       <p>
         Browse your favorite restaurant using our tools.
         {' '}
-        Just input your keywords, your time, or both and enjoy the results!
+        Just input your keywords, your time, or both and enjoy the results! or you can also search the collection
+        {' '}
+        <a href="/collection">here</a>
       </p>
       <div style={filterContainer}>
         <Input placeholder="Search restaurant name" onChange={(e) => handleSearchbarChange(e.target.value)} style={inputStyle} />
