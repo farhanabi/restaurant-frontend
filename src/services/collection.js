@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseUrl = 'http://localhost:3001/api/collections';
+const baseUrl = '/api/collections';
 
 const get = (params) => axios.get(baseUrl, { params });
 
